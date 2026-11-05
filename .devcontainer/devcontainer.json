@@ -22,7 +22,8 @@
 		// "ghcr.io/devcontainers/features/python:1": {}
 	},
 	"containerEnv": {
-		"WORKSPACE_DIR": "${containerWorkspaceFolder}"
+		"WORKSPACE_DIR": "${containerWorkspaceFolder}",
+		"GH_TOKEN": "${containerEnv:GITHUB_TOKEN}"
 	},
 	// remoteEnv is applied at runtime, not baked into an image layer -- keep
 	// tokens here rather than in containerEnv (which surfaces in `docker history`).
