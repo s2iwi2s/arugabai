@@ -1,2 +1,2 @@
-.devcontainer
-.devcontainer/**
+.devcontainer/.env.example
+.devcontainer/.env
