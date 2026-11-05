@@ -1,0 +1,45 @@
+{
+	"name": "GitHub Worktree Workspace",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+	// Guarantees .devcontainer/.env exists so the --env-file below does not fail
+	// on a fresh clone. initializeCommand runs on the HOST: /bin/sh on Linux and
+	// macOS, cmd.exe on Windows. `touch` does not exist on Windows, so the ||
+	// branch is the cmd.exe equivalent.
+	"initializeCommand": "touch .devcontainer/.env || type nul >> .devcontainer\\.env",
+	"runArgs": [
+		"--env-file",
+		"${localWorkspaceFolder}/.devcontainer/.env",
+		"--privileged"
+	],
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:4.1.3": {
+			"moby": false
+		},
+		"ghcr.io/devcontainers/features/github-cli:1.1.3": {}
+		// Add stack-specific features here, e.g.:
+		// "ghcr.io/devcontainers/features/node:1": { "version": "24" },
+		// "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
+		// "ghcr.io/devcontainers/features/python:1": {}
+	},
+	"containerEnv": {
+		"WORKSPACE_DIR": "${containerWorkspaceFolder}"
+	},
+	// remoteEnv is applied at runtime, not baked into an image layer -- keep
+	// tokens here rather than in containerEnv (which surfaces in `docker history`).
+	"remoteEnv": {
+		"PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
+	},
+	"mounts": [
+		"source=claude-config-${devcontainerId},target=/home/vscode/.claude,type=volume"
+	],
+	// Runs before postCreateCommand, so it's the only safe place to normalize a
+	// CRLF .env (authored on Windows) before setup-worktrees.sh sources it.
+	"onCreateCommand": "sed -i 's/\\r$//' .devcontainer/.env || true",
+	"postCreateCommand": {
+		"git-safe-directory": "git config --global --add safe.directory \"$WORKSPACE_DIR\"",
+		"claude": "curl -fsSL https://claude.ai/install.sh | bash",
+		// Chained, not separate entries: object-form postCreateCommand entries run
+		// in PARALLEL, and the credential setup has to land before anything clones.
+		"workspace": "bash .devcontainer/setup-git-credentials.sh && bash .devcontainer/setup-worktrees.sh"
+	}
+}
