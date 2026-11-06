@@ -10,7 +10,23 @@
 		"--env-file",
 		"${localWorkspaceFolder}/.devcontainer/.env",
 		"--privileged"
-	],
+	], // Configure VS Code specific settings and extensions
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"eamodio.gitlens", // Supercharges Git inside VS Code
+				"mhutchie.git-graph", // Visualizes your branch history
+				"github.vscode-pull-request-github" // Manage PRs directly in VS Code
+			],
+			"settings": {
+				// You can also pre-configure extension behaviors here
+				"gitlens.gitCommands.skipConfirmations": [
+					"fetch:command",
+					"pull:command"
+				]
+			}
+		}
+	},
 	"features": {
 		"ghcr.io/devcontainers/features/docker-in-docker:4.1.3": {
 			"moby": false
