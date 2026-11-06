@@ -1,4 +1,5 @@
 .devcontainer/**
+worktrees/arugabai/.bare/**
 worktrees/arugabai_agent/.bare/**
 worktrees/arugabai_api/.bare/**
 worktrees/arugabai_app/.bare/**
