@@ -94,7 +94,8 @@ from the start avoids relying on that.)
 If you haven't already: Command Palette → **Dev Containers: Reopen in Container**.
 
 First build takes a few minutes — it's pulling the base image and installing the
-`docker-in-docker` and `github-cli` features. Subsequent opens are fast (image layers are cached).
+`docker-in-docker`, `github-cli`, and Java 21 features. Subsequent opens are fast (image layers are
+cached).
 
 ### What happens automatically on first boot
 
@@ -102,13 +103,14 @@ First build takes a few minutes — it's pulling the base image and installing t
 
 1. `git config --global --add safe.directory ...` — needed because of how VS Code mounts the
    workspace.
-2. Installs the Claude Code CLI (`curl -fsSL https://claude.ai/install.sh | bash`).
+2. Makes the persistent `~/.claude` volume writable by the container user, then installs the
+   Claude Code CLI (`curl -fsSL https://claude.ai/install.sh | bash`).
 3. `setup-git-credentials.sh` then `setup-worktrees.sh`:
-   - **`setup-git-credentials.sh`** writes a fallback git credential (`~/.git-credentials`, scoped
-     to `github.com`) from your `GITHUB_TOKEN`, sitting *underneath* VS Code's own session
-     credential helper. This matters because VS Code's helper only works for processes launched
-     from an integrated terminal — a background job or `docker exec` doesn't see it, and would
-     otherwise fail with `fatal: could not read Username for 'https://github.com'`.
+   - **`setup-git-credentials.sh`** writes a git credential (`~/.git-credentials`, scoped to
+     `github.com`) with your `GITHUB_TOKEN` as the password and prioritizes it over VS Code's
+     system credential helper. An invalid credential from that helper otherwise prevents Git from
+     trying the valid token. If no `GITHUB_TOKEN` is configured, Git continues to rely on VS Code's
+     session helper.
    - **`setup-worktrees.sh`** reads every `UPSTREAM_REPO_<NAME>` variable, bare-clones each one
      into `worktrees/<name>/.bare/`, and checks out a worktree at `worktrees/<name>/<branch>/`.
 
@@ -180,13 +182,16 @@ git worktree remove ../<branch>
 "features": {
   "ghcr.io/devcontainers/features/docker-in-docker:2": {},
   "ghcr.io/devcontainers/features/github-cli:1": {},
+  "ghcr.io/devcontainers/features/java:1": { "version": "21" },
   "ghcr.io/devcontainers/features/node:1": { "version": "24" },
   "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
   "ghcr.io/devcontainers/features/python:1": {}
 }
 ```
 
-After editing `devcontainer.json`, Command Palette → **Dev Containers: Rebuild Container**.
+After editing `devcontainer.json`, Command Palette → **Dev Containers: Rebuild Container**. The API
+worktree requires Java 21; after the rebuild, `java -version` should report version 21 and
+`JAVA_HOME` should point to the installed JDK.
 
 ## 8. Troubleshooting
 
