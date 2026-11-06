@@ -1,2 +1,10 @@
-.devcontainer/.env.example
-.devcontainer/.env
+.devcontainer/**
+worktrees/arugabai_agent/.bare/**
+worktrees/arugabai_api/.bare/**
+worktrees/arugabai_app/.bare/**
+worktrees/arugabai_corpus/.bare/**
+worktrees/arugabai_design/.bare/**
+worktrees/arugabai_mobile_prototype/.bare/**
+worktrees/arugabai_org_defaults/.bare/**
+worktrees/arugabai_site/.bare/**
+worktrees/arugabai_techspec/.bare/**
