@@ -7,7 +7,9 @@
 # environment lacks that variable (a background refresh, a re-exec'd subprocess,
 # `docker exec`) gets a 401/authentication failure instead.
 #
-# So configure a `store` helper as a FALLBACK, using the token already in .env.
+# So configure the token before VS Code's system helper, using the token already
+# in .env. An invalid VS Code credential otherwise prevents Git from reaching
+# this helper.
 # `gh auth login --with-token` + `gh auth setup-git` is the other option if you'd
 # rather drive git credentials through the gh CLI instead of a raw token file.
 set -euo pipefail
@@ -44,14 +46,17 @@ fi
 # ~/.config/git/config, NOT ~/.gitconfig: VS Code runs
 # `git config --global --replace-all credential.helper ...` on every connect,
 # which would silently drop this. Git reads the XDG path too and VS Code never
-# touches it, so the fallback survives reconnects. It sits *after* VS Code's
-# helper in git's lookup order, so the session helper still wins when it works.
+# touches it, so the credential survives reconnects. The empty helper entry
+# resets VS Code's earlier system helper so this token is used consistently.
 mkdir -p "$HOME/.config/git"
-git config --file "$HOME/.config/git/config" --replace-all credential.helper store
+git config --file "$HOME/.config/git/config" --replace-all credential.helper ""
+git config --file "$HOME/.config/git/config" --add credential.helper store
 
-# Truncate rather than append so re-running cannot accumulate stale tokens.
-# GitHub accepts the PAT as the username with no password over HTTPS.
-printf 'https://%s@github.com\n' "$TOKEN" >"$HOME/.git-credentials"
+# Replace rather than append so re-running cannot accumulate stale tokens.
+# The credential-store helper URL-encodes the token and stores it as the password.
+: >"$HOME/.git-credentials"
+printf 'protocol=https\nhost=github.com\nusername=x-access-token\npassword=%s\n\n' "$TOKEN" |
+	git credential-store --file "$HOME/.git-credentials" store
 chmod 600 "$HOME/.git-credentials"
 
-echo "Configured a persistent github.com credential (fallback beneath VS Code's helper)."
+echo "Configured a persistent github.com credential (preferred over VS Code's helper)."
